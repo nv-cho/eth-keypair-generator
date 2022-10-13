@@ -21,6 +21,7 @@ From the same terminal, run the following commands to run the web interface we w
 
 ```
 $ npm install
+$ npm audit fix --force # this will patch any vulnerabilities in outdated packages
 $ npm run watch         # this will watch for updates in main.js and update bundle.js
 ```
 
@@ -31,7 +32,7 @@ $ npm run reload        # this will serve the app @ localhost:8081 and refresh t
 
 Now, open a new window in a web browser and enter *localhost:8081* in the address bar. This page will automatically refresh as you make updates to the *main.js* file in the steps below.
 
-If you run into any problems while implementing this demo application, try opening the developer tools in the browser (Ctrl + Shift + I or F12) and checking the 'Console' tab.
+If you run into any problems while implementing this demo application, try opening the developer tools in the browser (Ctrl + Shift + I or F12) and checking the 'Console' tab. If content doesn't refresh, terminate and restart both terminal calls (`npm run watch` and `npm run reload`)
 
 ## Generating randomness
 
@@ -81,7 +82,6 @@ With the private key, we can generate the public key. Import the ethereumjs wall
 
 ```javascript
 const Wallet = require('ethereumjs-wallet')
-
 ...
 
 function derivePubKey(privKey){
@@ -115,23 +115,35 @@ You can check this mnemonic, private key and address against [myetherwallet](htt
 
 Using this private key we can sign transactions from this address and broadcast them to the network.
 
+Note: There are now two types of transactions
+1. Legacy (Pre-EIP1559) which at some point will be deprecated
+2. EIP1559 Transactions utilising the new gas fee estimation methods
+
+Both types are covered here.
+
 Nodes that are verifying transactions in the network will use the signature to determine the address of the signatory, cryptographically verifying that every transaction from this account is coming from someone who has access to the corresponding private key. 
 
-You can sign transactions in the browser with the [ethereumjs-tx library](https://github.com/ethereumjs/ethereumjs-tx).
+You can sign transactions in the browser with the [@ethereumjs/tx library](https://github.com/ethereumjs/ethereumjs-monorepo/tree/master/packages/tx).
 
 ```javascript
-const EthereumTx = require('ethereumjs-tx')
+const { FeeMarketEIP1559Transaction, Transaction } = require("@ethereumjs/tx");
+const { Chain, Hardfork, Common } = require("@ethereumjs/common");
+const { bigIntToHex } = require("@ethereumjs/util");
 
-...
+function signLegacyTx(privKey, txData){  
+    const txParams = new Common({ chain: Chain.Mainnet, hardfork: Hardfork.Istanbul })
+    const tx = Transaction.fromTxData(txData, { txParams })
+    return tx.sign(privKey)
+}
 
-function signTx(privKey, txData){
-    const tx = new EthereumTx(txData)
-    tx.sign(privKey)
-    return tx
+function signEIP1559Tx(privKey, txData){  
+    const txOptions = new Common({ chain: Chain.Mainnet, hardfork: Hardfork.London })
+    const tx = FeeMarketEIP1559Transaction.fromTxData(txData, { txOptions })
+    return tx.sign(privKey)
 }
 ```
 
-Unsigned Ethereum transactions looks something like this
+Unsigned Legacy (Pre-EIP1559) Ethereum transactions looks something like this
 ```javascript
 {
     nonce: '0x00',
@@ -144,25 +156,73 @@ Unsigned Ethereum transactions looks something like this
 }
 ```
 
-And a signed transaction looks something like this
+And a signed Legacy (Pre-EIP1559) transaction looks something like this
 
 ```javascript
 { 
     nonce: '0x00', 
-    gasPrice: '0x09184e72a000', 
+    gasPrice: '0x09184e72a000',
+    maxPriorityFeePerGas: '0x09184e72a000', 
+    maxFeePerGas: '0x09184e72a000', 
     gasLimit: '0x2710', 
     to: '0x31c1c0fec59ceb9cbe6ec474c31c1dc5b66555b6', 
     value: '0x00', 
     data: '0x7f7465737432000000000000000000000000000000000000000000000000000000600057', 
-    v: '0x29', 
-    r: '0xb934fbdb16fda944ddc0cb33e64344b90fbd25564444832f7f8d697512069402',
-    s: '0x29' 
+    v: '0x2a', 
+    r: '0x9862e7abc560cfca23001f93e11befb15b56bf4f5f0114a12d1a5a05b70d318d',
+    s: '0x636bf244663af57f61a7fb2a12457defd8bbcd71190d5cba6814f56a3e3e2cbd ' 
 }
 ```
 
 Notice the main difference is the inclusion of the variables v, r and s. These variables are used to recover the address corresponding to the key that signed the transaction. This signed transaction is broadcast to the network to be included in a block.
 
 You can recover the sender address from the signed transaction with the following method
+
+```javascript
+function getSignerAddress(signedTx){
+    return "0x" + signedTx.getSenderAddress().toString('hex')
+}
+```
+
+Unsigned EIP1559 Ethereum transactions looks something like this - *note* the gasPrice is missing and replaced with `maxPriorityFeePerGas` and `maxFeePerGas`, and there is a `type: 2` indicating the EIP1559 transaction.
+
+```javascript
+{
+    nonce: '0x00', 
+    type: 2, 
+    gasLimit: '0x09184e72a000', 
+    maxPriorityFeePerGas: '0x09184e72a000', 
+    maxFeePerGas: '0x09184e72a000',
+    gasLimit: '0x2710',
+    to: '0x31c1c0fec59ceb9cbe6ec474c31c1dc5b66555b6', 
+    value: '0x10', 
+    data: '0x7f7465737432000000000000000000000000000000000000000000000000000000600057',
+    chainId: 3
+}
+```
+
+And a signed EIP1559 transaction looks something like this
+
+```javascript
+{ 
+    nonce: '0x00', 
+    type: 2, 
+    gasLimit: '0x09184e72a000',
+    maxPriorityFeePerGas: '0x09184e72a000', 
+    maxFeePerGas: '0x09184e72a000',
+    to: '0x31c1c0fec59ceb9cbe6ec474c31c1dc5b66555b6', 
+    value: '0x00', 
+    data: '0x7f7465737432000000000000000000000000000000000000000000000000000000600057', 
+    chainId: 3, 
+    v: 0x29, 
+    r: 0x0172f576ab20d1616ec839b0a8a3475e8113f83f7d98cbe3822f4f4dd7bca262, 
+    s: 0x025d92c8f2d3add278c263030fb2b4195bb15ad55418141c774354a9594be972   
+}
+```
+
+Notice the main difference is the inclusion of the variables v, r and s. These variables are used to recover the address corresponding to the key that signed the transaction. This signed transaction is broadcast to the network to be included in a block.
+
+You can recover the sender address from the signed transaction in exactly the same way with the following method
 
 ```javascript
 function getSignerAddress(signedTx){

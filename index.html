@@ -22,10 +22,11 @@
         <p>Private Key: {{privKey.toString('hex')}}</p>
         <p>Public Key:  {{pubKey.toString('hex')}}</p>
         <p>Ethereum address: {{ETHaddress}}</p>
-        <button v-on:click="signSampleTx">Sign sample transaction</button>
+        <button v-on:click="signSampleLegacyTx">Sign sample Legacy transaction</button>
+        <button v-on:click="signSampleEIP1559Tx">Sign sample EIP1559 transaction</button>
       </div>
-      <div v-if="recoveredAddress !== ''">
-        <h3>Transaction</h3>
+      <div v-if="recoveredLegacyAddress !== ''">
+        <h3>Legacy Transaction</h3>
         <code>
             { nonce: '0x00',
             gasPrice: '0x09184e72a000', 
@@ -33,7 +34,7 @@
             to: '0x31c1c0fec59ceb9cbe6ec474c31c1dc5b66555b6', 
             value: '0x10', 
             data: '0x7f7465737432000000000000000000000000000000000000000000000000000000600057',
-            chainId: 1 }
+            chainId: 3 }
         </code>
         <br><br>
         <div>
@@ -44,12 +45,45 @@
                 to: '0x31c1c0fec59ceb9cbe6ec474c31c1dc5b66555b6',
                 value: '0x00',
                 data: '0x7f7465737432000000000000000000000000000000000000000000000000000000600057',
-                v: {{'0x' + signedSample.v.toString('hex')}},
-                r: {{'0x' + signedSample.r.toString('hex')}},
-                s: {{'0x' + signedSample.v.toString('hex')}}
+                chainId: 3,
+                v: {{getHex(signedLegacySample.v)}},
+                r: {{getHex(signedLegacySample.r)}},
+                s: {{getHex(signedLegacySample.s)}}
               }</code>
         </div>
-        <p>Recovered address: {{recoveredAddress}}</p>
+        <p>Recovered address: {{recoveredLegacyAddress}}</p>
+      </div>
+      <div v-if="recoveredEIP1559Address !== ''">
+        <h3>EIP1559 Transaction</h3>
+        <code>
+            { nonce: '0x00',
+            type: 2,
+            maxPriorityFeePerGas: '0x09184e72a000', // not an accurate price
+            maxFeePerGas: '0x09184e72a000', // not an accurate price
+            gasLimit: '0x2710',
+            to: '0x31c1c0fec59ceb9cbe6ec474c31c1dc5b66555b6', 
+            value: '0x10', 
+            data: '0x7f7465737432000000000000000000000000000000000000000000000000000000600057',
+            chainId: 3 }
+        </code>        
+        <br><br>
+        <div>
+            <code>Signed raw EIP1559 tx: {
+                nonce: '0x00',
+                type: 2,
+                gasPrice: '0x09184e72a000',
+                maxPriorityFeePerGas: '0x09184e72a000', 
+                maxFeePerGas: '0x09184e72a000', 
+                to: '0x31c1c0fec59ceb9cbe6ec474c31c1dc5b66555b6',
+                value: '0x00',
+                data: '0x7f7465737432000000000000000000000000000000000000000000000000000000600057',
+                chainId: 3,
+                v: {{getHex(signedEIP1559Sample.v)}},
+                r: {{getHex(signedEIP1559Sample.r)}},
+                s: {{getHex(signedEIP1559Sample.s)}}
+              }</code>
+        </div>
+        <p>Recovered address: {{recoveredEIP1559Address}}</p>
       </div>
     </div>
   </body>
