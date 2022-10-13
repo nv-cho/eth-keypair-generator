@@ -131,7 +131,7 @@ function signTx(privKey, txData){
 }
 ```
 
-Unsigned Ethereum transactions looks something like this
+Unsigned Legacy (Pre-EIP1559) Ethereum transactions looks something like this
 ```javascript
 {
     nonce: '0x00',
@@ -144,7 +144,7 @@ Unsigned Ethereum transactions looks something like this
 }
 ```
 
-And a signed transaction looks something like this
+And a signed Legacy (Pre-EIP1559) transaction looks something like this
 
 ```javascript
 { 
@@ -154,15 +154,57 @@ And a signed transaction looks something like this
     to: '0x31c1c0fec59ceb9cbe6ec474c31c1dc5b66555b6', 
     value: '0x00', 
     data: '0x7f7465737432000000000000000000000000000000000000000000000000000000600057', 
-    v: '0x29', 
-    r: '0xb934fbdb16fda944ddc0cb33e64344b90fbd25564444832f7f8d697512069402',
-    s: '0x29' 
+    v: '0x2a', 
+    r: '0x9862e7abc560cfca23001f93e11befb15b56bf4f5f0114a12d1a5a05b70d318d',
+    s: '0x636bf244663af57f61a7fb2a12457defd8bbcd71190d5cba6814f56a3e3e2cbd ' 
 }
 ```
 
 Notice the main difference is the inclusion of the variables v, r and s. These variables are used to recover the address corresponding to the key that signed the transaction. This signed transaction is broadcast to the network to be included in a block.
 
 You can recover the sender address from the signed transaction with the following method
+
+```javascript
+function getSignerAddress(signedTx){
+    return "0x" + signedTx.getSenderAddress().toString('hex')
+}
+```
+
+Unsigned EIP1559 Ethereum transactions looks something like this
+```javascript
+{
+    nonce: '0x00',
+    gasPrice: '0x09184e72a000', 
+    gasLimit: '0x2710',
+    to: '0x31c1c0fec59ceb9cbe6ec474c31c1dc5b66555b6', 
+    value: '0x10', 
+    data: '0x7f7465737432000000000000000000000000000000000000000000000000000000600057',
+    chainId: 3
+}
+```
+
+And a signed EIP1559 transaction looks something like this
+
+```javascript
+{ 
+    nonce: '0x00', 
+    type: 2, 
+    gasPrice: '0x09184e72a000', 
+    maxPriorityFeePerGas: '0x09184e72a000', 
+    maxFeePerGas: '0x09184e72a000',
+    to: '0x31c1c0fec59ceb9cbe6ec474c31c1dc5b66555b6', 
+    value: '0x00', 
+    data: '0x7f7465737432000000000000000000000000000000000000000000000000000000600057', 
+    chainId: 3, 
+    v: 0x29, 
+    r: 0x0172f576ab20d1616ec839b0a8a3475e8113f83f7d98cbe3822f4f4dd7bca262, 
+    s: 0x025d92c8f2d3add278c263030fb2b4195bb15ad55418141c774354a9594be972   
+}
+```
+
+Notice the main difference is the inclusion of the variables v, r and s. These variables are used to recover the address corresponding to the key that signed the transaction. This signed transaction is broadcast to the network to be included in a block.
+
+You can recover the sender address from the signed transaction in exactly the same way with the following method
 
 ```javascript
 function getSignerAddress(signedTx){
