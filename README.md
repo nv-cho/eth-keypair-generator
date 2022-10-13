@@ -21,6 +21,7 @@ From the same terminal, run the following commands to run the web interface we w
 
 ```
 $ npm install
+$ npm audit fix --force # this will patch any vulnerabilities in outdated packages
 $ npm run watch         # this will watch for updates in main.js and update bundle.js
 ```
 
@@ -81,7 +82,6 @@ With the private key, we can generate the public key. Import the ethereumjs wall
 
 ```javascript
 const Wallet = require('ethereumjs-wallet')
-
 ...
 
 function derivePubKey(privKey){
@@ -115,19 +115,31 @@ You can check this mnemonic, private key and address against [myetherwallet](htt
 
 Using this private key we can sign transactions from this address and broadcast them to the network.
 
+Note: There are now two types of transactions
+1. Legacy (Pre-EIP1559) which at some point will be deprecated
+2. EIP1559 Transactions utilising the new gas fee estimation methods
+
+Both types are covered here.
+
 Nodes that are verifying transactions in the network will use the signature to determine the address of the signatory, cryptographically verifying that every transaction from this account is coming from someone who has access to the corresponding private key. 
 
-You can sign transactions in the browser with the [ethereumjs-tx library](https://github.com/ethereumjs/ethereumjs-tx).
+You can sign transactions in the browser with the [@ethereumjs/tx library](https://github.com/ethereumjs/ethereumjs-monorepo/tree/master/packages/tx).
 
 ```javascript
-const EthereumTx = require('ethereumjs-tx')
+const { FeeMarketEIP1559Transaction, Transaction } = require("@ethereumjs/tx");
+const { Chain, Hardfork, Common } = require("@ethereumjs/common");
+const { bigIntToHex } = require("@ethereumjs/util");
 
-...
+function signLegacyTx(privKey, txData){  
+    const txParams = new Common({ chain: Chain.Mainnet, hardfork: Hardfork.Istanbul })
+    const tx = Transaction.fromTxData(txData, { txParams })
+    return tx.sign(privKey)
+}
 
-function signTx(privKey, txData){
-    const tx = new EthereumTx(txData)
-    tx.sign(privKey)
-    return tx
+function signEIP1559Tx(privKey, txData){  
+    const txOptions = new Common({ chain: Chain.Mainnet, hardfork: Hardfork.London })
+    const tx = FeeMarketEIP1559Transaction.fromTxData(txData, { txOptions })
+    return tx.sign(privKey)
 }
 ```
 
@@ -149,7 +161,9 @@ And a signed Legacy (Pre-EIP1559) transaction looks something like this
 ```javascript
 { 
     nonce: '0x00', 
-    gasPrice: '0x09184e72a000', 
+    gasPrice: '0x09184e72a000',
+    maxPriorityFeePerGas: '0x09184e72a000', 
+    maxFeePerGas: '0x09184e72a000', 
     gasLimit: '0x2710', 
     to: '0x31c1c0fec59ceb9cbe6ec474c31c1dc5b66555b6', 
     value: '0x00', 
@@ -170,12 +184,13 @@ function getSignerAddress(signedTx){
 }
 ```
 
-Unsigned EIP1559 Ethereum transactions looks something like this
+Unsigned EIP1559 Ethereum transactions looks something like this - not the gasPrice is missing and replace with `maxPriorityFeePerGas` and `maxFeePerGas`
+
 ```javascript
 {
     nonce: '0x00', 
     type: 2, 
-    gasPrice: '0x09184e72a000', 
+    gasLimit: '0x09184e72a000', 
     maxPriorityFeePerGas: '0x09184e72a000', 
     maxFeePerGas: '0x09184e72a000',
     gasLimit: '0x2710',
@@ -192,7 +207,7 @@ And a signed EIP1559 transaction looks something like this
 { 
     nonce: '0x00', 
     type: 2, 
-    gasPrice: '0x09184e72a000', 
+    gasLimit: '0x09184e72a000',
     maxPriorityFeePerGas: '0x09184e72a000', 
     maxFeePerGas: '0x09184e72a000',
     to: '0x31c1c0fec59ceb9cbe6ec474c31c1dc5b66555b6', 

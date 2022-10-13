@@ -3,6 +3,7 @@
 
 // Add functions here
 
+
 /*
 
 Do not edit code below this line.
@@ -42,16 +43,17 @@ var mnemonicVue = new Vue({
         recoveredEIP1559Address: ""
     },
     methods:{
+        getHex: function(val){
+            return bigIntToHex(val);
+        },
         generateNew: function(){
             this.mnemonic = generateMnemonic()
         },
         signSampleLegacyTx: function(){
-            this.signedLegacySample = signTx(this.privKey, this.sampleLegacyTransaction)
-            console.log("signed Legacy Sample", this.signedLegacySample)
+            this.signedLegacySample = signLegacyTx(this.privKey, this.sampleLegacyTransaction);
         },
         signSampleEIP1559Tx: function(){
-            this.signedEIP1559Sample = signTx(this.privKey, this.sampleEIP1559Transaction)
-            console.log("signed 1559 Sample", this.signedEIP1559Sample)
+            this.signedEIP1559Sample = signEIP1559Tx(this.privKey, this.sampleEIP1559Transaction);
         }
     },
     watch: {
