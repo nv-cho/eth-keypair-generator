@@ -32,7 +32,7 @@ $ npm run reload        # this will serve the app @ localhost:8081 and refresh t
 
 Now, open a new window in a web browser and enter *localhost:8081* in the address bar. This page will automatically refresh as you make updates to the *main.js* file in the steps below.
 
-If you run into any problems while implementing this demo application, try opening the developer tools in the browser (Ctrl + Shift + I or F12) and checking the 'Console' tab.
+If you run into any problems while implementing this demo application, try opening the developer tools in the browser (Ctrl + Shift + I or F12) and checking the 'Console' tab. If content doesn't refresh, terminate and restart both terminal calls (`npm run watch` and `npm run reload`)
 
 ## Generating randomness
 
