@@ -1,10 +1,7 @@
 // Add imports here
 
 
-
 // Add functions here
-
-
 
 /*
 
@@ -39,22 +36,22 @@ var mnemonicVue = new Vue({
             data: '0x7f7465737432000000000000000000000000000000000000000000000000000000600057',
             chainId: 3
         },
-        signedSample: {},
+        signedLegacySample: {},
         signedEIP1559Sample: {},
-        recoveredAddress: "",
+        recoveredLegacyAddress: "",
         recoveredEIP1559Address: ""
     },
     methods:{
         generateNew: function(){
             this.mnemonic = generateMnemonic()
         },
-        signSampleTx: function(){
-            this.signedSample = signTx(this.privKey, this.sampleLegacyTransaction)
-            console.log("signed Legacy Sample", this.signedSample)
+        signSampleLegacyTx: function(){
+            this.signedLegacySample = signTx(this.privKey, this.sampleLegacyTransaction)
+            console.log("signed Legacy Sample", this.signedLegacySample)
         },
         signSampleEIP1559Tx: function(){
             this.signedEIP1559Sample = signTx(this.privKey, this.sampleEIP1559Transaction)
-            console.log("signed 1559 Sample", this.sampleEIP1559Transaction)
+            console.log("signed 1559 Sample", this.signedEIP1559Sample)
         }
     },
     watch: {
@@ -68,8 +65,11 @@ var mnemonicVue = new Vue({
             this.ETHaddress = deriveEthAddress(val)
             this.recoveredAddress = ""
         },
-        signedSample: function(val){
-            this.recoveredAddress = getSignerAddress(val)
+        signedLegacySample: function(val){
+            this.recoveredLegacyAddress = getSignerAddress(val)
+        },
+        signedEIP1559Sample: function(val){
+            this.recoveredEIP1559Address = getSignerAddress(val)
         }
     }
 })
