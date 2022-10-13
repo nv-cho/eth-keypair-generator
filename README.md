@@ -173,8 +173,11 @@ function getSignerAddress(signedTx){
 Unsigned EIP1559 Ethereum transactions looks something like this
 ```javascript
 {
-    nonce: '0x00',
+    nonce: '0x00', 
+    type: 2, 
     gasPrice: '0x09184e72a000', 
+    maxPriorityFeePerGas: '0x09184e72a000', 
+    maxFeePerGas: '0x09184e72a000',
     gasLimit: '0x2710',
     to: '0x31c1c0fec59ceb9cbe6ec474c31c1dc5b66555b6', 
     value: '0x10', 
